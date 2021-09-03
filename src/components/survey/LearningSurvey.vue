@@ -26,9 +26,9 @@
           <input type="radio" id="rating-great" value="great" name="rating" v-model="chosenRating" />
           <label for="rating-great">Great</label>
         </div>
-        <p
-          v-if="invalidInput"
-        >One or more input fields are invalid. Please check your provided data.</p>
+        <p v-if="invalidInput">One or more input fields are invalid. Please check your provided data.</p>
+        <p v-if="error" class="error">{{ error }}</p>
+        <p v-if="successMessage" class="success">{{ successMessage }}</p>
         <div>
           <base-button>Submit</base-button>
         </div>
@@ -44,6 +44,8 @@ export default {
       enteredName: '',
       chosenRating: null,
       invalidInput: false,
+      error: null,
+      successMessage: null
     };
   },
   emits: ['survey-submit'],
@@ -54,11 +56,35 @@ export default {
         return;
       }
       this.invalidInput = false;
+      this.error = null;
+      this.successMessage = null;
 
-      this.$emit('survey-submit', {
-        userName: this.enteredName,
-        rating: this.chosenRating,
-      });
+      // this.$emit('survey-submit', {
+      //   userName: this.enteredName,
+      //   rating: this.chosenRating,
+      // });
+
+      fetch('https://vue-http-demo-a1c6b-default-rtdb.firebaseio.com/surveys.json', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'aplication/json'
+        },
+        body: JSON.stringify({
+          name: this.enteredName,
+          rating: this.chosenRating
+        })
+      })
+      .then(res => {
+        if (res.ok) {
+          this.successMessage = 'Upload Successful!'
+        } else {
+          throw new Error('Could not Save Data!')
+        }
+      })
+      .catch(err => {
+        console.log(err);
+        this.error = err.message
+      })
 
       this.enteredName = '';
       this.chosenRating = null;
@@ -76,5 +102,12 @@ input[type='text'] {
   display: block;
   width: 20rem;
   margin-top: 0.5rem;
+}
+
+.error {
+  color: red;
+}
+.success {
+  color: green;
 }
 </style>
